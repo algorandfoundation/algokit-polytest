@@ -115,7 +115,7 @@
   },
   "document": {
     "markdown": {
-      "out_file": "../docs/transact_test_plan.md"
+      "out_file": "../docs/test_plans/transact.md"
     }
   }
 }

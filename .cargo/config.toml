@@ -1,3 +1,4 @@
 [alias]
 bin = ["run", "--package", "cargo-bin", "--"]
-
+polytest = "bin polytest"
+pt_transact = "polytest -c test_configs/transact.json"
