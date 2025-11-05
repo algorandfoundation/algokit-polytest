@@ -5,9 +5,15 @@
   "type": "module",
   "main": "src/server.ts",
   "scripts": {
-    "start": "tsx src/server.ts"
+    "start": "tsx src/server.ts",
+    "test": "vitest"
   },
-  "keywords": ["msw", "mock", "server", "testing"],
+  "keywords": [
+    "msw",
+    "mock",
+    "server",
+    "testing"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -17,6 +23,7 @@
   "devDependencies": {
     "@types/node": "^24.10.0",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.7"
   }
 }
