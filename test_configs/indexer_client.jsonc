@@ -1,0 +1,111 @@
+{
+  "name": "indexer_client Test Plan",
+  "package_name": "indexer_client",
+  "suite": {
+    "GET /health": {
+      "desc": "Tests for the /health endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/accounts": {
+      "desc": "Tests for the /v2/accounts endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/accounts/{account-id}": {
+      "desc": "Tests for the /v2/accounts/{account-id} endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/accounts/{account-id}/apps-local-state": {
+      "desc": "Tests for the /v2/accounts/{account-id}/apps-local-state endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/accounts/{account-id}/assets": {
+      "desc": "Tests for the /v2/accounts/{account-id}/assets endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/accounts/{account-id}/created-applications": {
+      "desc": "Tests for the /v2/accounts/{account-id}/created-applications endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/accounts/{account-id}/created-assets": {
+      "desc": "Tests for the /v2/accounts/{account-id}/created-assets endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/accounts/{account-id}/transactions": {
+      "desc": "Tests for the /v2/accounts/{account-id}/transactions endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/applications": {
+      "desc": "Tests for the /v2/applications endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/applications/{application-id}": {
+      "desc": "Tests for the /v2/applications/{application-id} endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/applications/{application-id}/box": {
+      "desc": "Tests for the /v2/applications/{application-id}/box endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/applications/{application-id}/boxes": {
+      "desc": "Tests for the /v2/applications/{application-id}/boxes endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/applications/{application-id}/logs": {
+      "desc": "Tests for the /v2/applications/{application-id}/logs endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/assets": {
+      "desc": "Tests for the /v2/assets endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/assets/{asset-id}": {
+      "desc": "Tests for the /v2/assets/{asset-id} endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/assets/{asset-id}/balances": {
+      "desc": "Tests for the /v2/assets/{asset-id}/balances endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/assets/{asset-id}/transactions": {
+      "desc": "Tests for the /v2/assets/{asset-id}/transactions endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/block-headers": {
+      "desc": "Tests for the /v2/block-headers endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/blocks/{round-number}": {
+      "desc": "Tests for the /v2/blocks/{round-number} endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/transactions": {
+      "desc": "Tests for the /v2/transactions endpoint",
+      "groups": ["Common Tests"]
+    },
+    "GET /v2/transactions/{txid}": {
+      "desc": "Tests for the /v2/transactions/{txid} endpoint",
+      "groups": ["Common Tests"]
+    }
+  },
+  "group": {
+    "Common Tests": {
+      "desc": "Common tests for all endpoints",
+      "test": {
+        "Basic request and response valudation": {
+          "desc": "Given a known request validate that the same request can be made using our models. Then, validate that our response model aligns with the known response"
+        }
+      }
+    }
+  },
+  "target": {
+    "pytest": {
+      // TODO: Determine actual test directory
+      "out_dir": "tmp_tests"
+    }
+  },
+  "document": {
+    "markdown": {
+      "out_file": "../docs/test_plans/indexer_client.md"
+    }
+  }
+}
