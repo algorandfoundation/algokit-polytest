@@ -1,5 +1,5 @@
 {
-  "name": "algokit_transact Test Plan",
+  "name": "algod_client Test Plan",
   "package_name": "algod_client",
   "suite": {
     "GET /debug/settings/config": {
