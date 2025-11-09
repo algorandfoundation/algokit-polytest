@@ -337,10 +337,10 @@
 
 | Name | Description |
 | --- | --- |
-| [Basic request and response valudation](#basic-request-and-response-valudation) | Given a known request validate that the same request can be made using our models. Then, validate that our response model aligns with the known response |
+| [Basic request and response validation](#basic-request-and-response-validation) | Given a known request validate that the same request can be made using our models. Then, validate that our response model aligns with the known response |
 
 ## Test Cases
 
-### Basic request and response valudation
+### Basic request and response validation
 
 Given a known request validate that the same request can be made using our models. Then, validate that our response model aligns with the known response

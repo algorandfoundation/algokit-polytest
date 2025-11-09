@@ -91,7 +91,7 @@
     "Common Tests": {
       "desc": "Common tests for all endpoints",
       "test": {
-        "Basic request and response valudation": {
+        "Basic request and response validation": {
           "desc": "Given a known request validate that the same request can be made using our models. Then, validate that our response model aligns with the known response"
         }
       }
