@@ -1,0 +1,32 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PollyJS Server > should work with the recorded status request 1`] = `
+NodeStatusResponse {
+  "catchpoint": "",
+  "catchpointAcquiredBlocks": 0,
+  "catchpointProcessedAccounts": 0,
+  "catchpointProcessedKvs": 0,
+  "catchpointTotalAccounts": 0,
+  "catchpointTotalBlocks": 0,
+  "catchpointTotalKvs": 0,
+  "catchpointVerifiedAccounts": 0,
+  "catchpointVerifiedKvs": 0,
+  "catchupTime": 0n,
+  "lastCatchpoint": "",
+  "lastRound": 17n,
+  "lastVersion": "https://github.com/algorandfoundation/specs/tree/953304de35264fc3ef91bcd05c123242015eeaed",
+  "nextVersion": "https://github.com/algorandfoundation/specs/tree/953304de35264fc3ef91bcd05c123242015eeaed",
+  "nextVersionRound": 18n,
+  "nextVersionSupported": true,
+  "stoppedAtUnsupportedRound": false,
+  "timeSinceLastRound": 152696395985404n,
+  "upgradeDelay": undefined,
+  "upgradeNextProtocolVoteBefore": undefined,
+  "upgradeNoVotes": undefined,
+  "upgradeNodeVote": undefined,
+  "upgradeVoteRounds": undefined,
+  "upgradeVotes": undefined,
+  "upgradeVotesRequired": undefined,
+  "upgradeYesVotes": undefined,
+}
+`;
