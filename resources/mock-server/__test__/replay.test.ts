@@ -10,7 +10,7 @@ describe("Algod Mock Server", () => {
   let algodClient: Algodv2;
 
   beforeAll(async () => {
-    algodServer = await startServer("algod", "replay");
+    algodServer = await startServer("algod");
     algodClient = new Algodv2(
       "a".repeat(64),
       "http://localhost",
@@ -60,7 +60,7 @@ describe("Indexer Mock Server", () => {
   let indexerClient: Indexer;
 
   beforeAll(async () => {
-    indexerServer = await startServer("indexer", "replay");
+    indexerServer = await startServer("indexer");
     indexerClient = new Indexer(
       "a".repeat(64),
       "http://localhost",
@@ -110,7 +110,7 @@ describe("KMD Mock Server", () => {
   let kmdClient: Kmd;
 
   beforeAll(async () => {
-    kmdServer = await startServer("kmd", "replay");
+    kmdServer = await startServer("kmd");
     kmdClient = new Kmd("a".repeat(64), "http://localhost", kmdServer.port);
   });
 

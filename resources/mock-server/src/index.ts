@@ -76,9 +76,10 @@ export async function record(
 
 export async function replay<T>(
   client: Client,
-  makeRequests: () => Promise<T>
+  makeRequests: () => Promise<T>,
+  recordingsDir?: string
 ): Promise<T> {
-  const polly = getPolly(client, { mode: "replay" });
+  const polly = getPolly(client, { mode: "replay", recordingsDir });
 
   try {
     return await makeRequests();

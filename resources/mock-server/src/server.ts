@@ -1,7 +1,6 @@
 import type { HeadersInit } from "bun";
 import Fastify from "fastify";
 import { replay, type Client } from "./index";
-import { recordAlgosdkRequests } from "./record";
 
 export type ServerInstance = {
   port: number;
@@ -23,14 +22,8 @@ const DEFAULT_PORTS = {
 
 export async function startServer(
   client: Client,
-  mode: "record-new" | "record-overwrite" | "replay" = "replay",
   recordingsDir?: string
 ): Promise<ServerInstance> {
-  // Only record if not in replay mode
-  if (mode !== "replay") {
-    await recordAlgosdkRequests(client, mode, recordingsDir);
-  }
-
   const fastify = Fastify({
     logger: {
       level: process.env.LOG_LEVEL || "info",
@@ -87,7 +80,8 @@ export async function startServer(
               request.method !== "GET" && request.method !== "HEAD"
                 ? JSON.stringify(request.body)
                 : undefined
-          })
+          }),
+        recordingsDir
       );
     } catch (e) {
       reply.status(500).send(JSON.stringify(e));
