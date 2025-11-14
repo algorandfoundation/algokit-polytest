@@ -49,7 +49,8 @@ export function getPolly(
 
   const headersToRemove = [
     "transfer-encoding", // Conflicts with content-length header during replay
-    "content-encoding" // HAR stores decompressed body but header indicates compression (e.g. gzip), causing decompression errors
+    "content-encoding", // HAR stores decompressed body but header indicates compression (e.g. gzip), causing decompression errors
+    "content-length" // Let the server calculate the correct content-length for the response
   ];
   polly.server.any().on("beforeReplay", (_req, rec) => {
     rec.response.headers = rec.response.headers.filter(

@@ -1,6 +1,7 @@
 import type { HeadersInit } from "bun";
 import Fastify from "fastify";
 import { replay, type Client } from "./index";
+import { recordAlgosdkRequests } from "./record";
 
 export type ServerInstance = {
   port: number;
@@ -24,6 +25,8 @@ export async function startServer(
   client: Client,
   recordingsDir?: string
 ): Promise<ServerInstance> {
+  await recordAlgosdkRequests(client, "record-new", recordingsDir);
+
   const fastify = Fastify({
     logger: {
       level: process.env.LOG_LEVEL || "info",
