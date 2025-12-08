@@ -12,8 +12,8 @@ if [[ $# -lt 1 ]] || [[ ! "$1" =~ ^(algod|kmd|indexer)$ ]]; then
     echo ""
     echo "Examples:"
     echo "  $0 algod     # Start algod mock on port 8000"
-    echo "  $0 indexer   # Start indexer mock on port 8002"
     echo "  $0 kmd       # Start kmd mock on port 8001"
+    echo "  $0 indexer   # Start indexer mock on port 8002"
     exit 1
 fi
 

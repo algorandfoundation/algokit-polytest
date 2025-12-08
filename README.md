@@ -50,25 +50,7 @@ Starts a mock server for testing Algorand API clients.
   with:
     client: algod  # Required: algod, indexer, or kmd
 
-# After this step, MOCK_ALGOD_URL is available (e.g., http://localhost:8000)
-```
-
-**Multiple servers:**
-
-```yaml
-- uses: algorandfoundation/algokit-polytest/.github/actions/run-mock-server@main
-  with:
-    client: algod
-
-- uses: algorandfoundation/algokit-polytest/.github/actions/run-mock-server@main
-  with:
-    client: indexer
-
-- uses: algorandfoundation/algokit-polytest/.github/actions/run-mock-server@main
-  with:
-    client: kmd
-
-# Available: MOCK_ALGOD_URL, MOCK_INDEXER_URL, MOCK_KMD_URL
+# After this step, MOCK_ALGOD_URL, MOCK_INDEXER_URL, MOCK_KMD_URL is available (e.g., http://localhost:8000)
 ```
 
 See [run-mock-server README](.github/actions/run-mock-server/README.md) for full documentation.

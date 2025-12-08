@@ -9,10 +9,6 @@ inputs:
     description: "Port to run the server on (defaults: algod=8000, indexer=8002, kmd=8001)"
     required: false
     default: ""
-  ref:
-    description: "Git ref to use when action is called from external repos"
-    required: false
-    default: "main"
 
 runs:
   using: "composite"
@@ -21,7 +17,7 @@ runs:
       id: port
       shell: bash
       run: |
-        set -Eeuo pipefail
+        set -euo pipefail
         
         CLIENT="${{ inputs.client }}"
         PORT="${{ inputs.port }}"
@@ -57,14 +53,14 @@ runs:
       shell: bash
       working-directory: ${{ github.action_path }}/../../../resources/mock-server
       run: |
-        set -Eeuo pipefail
+        set -euo pipefail
         bun install --frozen-lockfile
 
     - name: Start mock server
       shell: bash
       working-directory: ${{ github.action_path }}/../../../resources/mock-server
       run: |
-        set -Eeuo pipefail
+        set -euo pipefail
         
         CLIENT="${{ inputs.client }}"
         PORT="${{ steps.port.outputs.port }}"
@@ -85,7 +81,7 @@ runs:
     - name: Wait for health check
       shell: bash
       run: |
-        set -Eeuo pipefail
+        set -euo pipefail
         
         CLIENT="${{ inputs.client }}"
         PORT="${{ steps.port.outputs.port }}"
@@ -120,7 +116,7 @@ runs:
     - name: Export environment variables
       shell: bash
       run: |
-        set -Eeuo pipefail
+        set -euo pipefail
         
         CLIENT="${{ inputs.client }}"
         PORT="${{ steps.port.outputs.port }}"

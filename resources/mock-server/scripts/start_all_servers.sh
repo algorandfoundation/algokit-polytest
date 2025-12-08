@@ -46,8 +46,11 @@ echo "Waiting for servers to be ready..."
 all_healthy=true
 for port in 8000 8001 8002; do
     for i in {1..30}; do
-        if curl -sf "http://localhost:$port/health" > /dev/null 2>&1; then
-            echo "  Port $port: ready"
+        # Accept ANY HTTP response (even 500) as server being ready
+        # The mock server returns 500 for unrecorded endpoints like /health
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 2 "http://localhost:$port/health" 2>/dev/null || echo "000")
+        if [[ "$HTTP_CODE" != "000" ]]; then
+            echo "  Port $port: ready (HTTP $HTTP_CODE)"
             break
         fi
         if [[ $i -eq 30 ]]; then
