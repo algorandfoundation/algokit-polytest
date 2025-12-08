@@ -7,7 +7,7 @@ on:
   workflow_dispatch: # Manual trigger for testing from any branch
 
 env:
-  IMAGE: ghcr.io/aorumbayev/polytest-mock-server
+  IMAGE: ghcr.io/algorandfoundation/polytest-mock-server
 
 jobs:
   publish:
