@@ -118,33 +118,3 @@ Implementation repositories (e.g., `algokit-utils-py`, `algokit-utils-ts`) use t
 
 1. **Test Generation**: polytest CLI with `--git` flag pulls configs from this repo
 2. **Mock Server**: GitHub Action starts the mock server in CI
-
-Example `pyproject.toml`:
-
-```toml
-[tool.poe.tasks]
-polytest-validate-algod = "polytest --config test_configs/algod_client.jsonc --git 'https://github.com/algorandfoundation/algokit-polytest#main' validate -t pytest"
-```
-
-Example CI workflow:
-
-```yaml
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: algorandfoundation/algokit-polytest/.github/actions/run-mock-server@main
-        with:
-          client: algod
-      
-      - run: pytest tests/modules/algod_client/
-        env:
-          MOCK_ALGOD_URL: ${{ env.MOCK_ALGOD_URL }}
-```
-
-## Resources
-
-- [polytest documentation](https://github.com/joe-p/polytest)
-- [Multi-repo workflow guide](https://github.com/joe-p/polytest/blob/main/docs/multi_repo.md)
