@@ -26,7 +26,7 @@ cd "$MOCK_SERVER_DIR"
 start_server() {
     local client=$1
     local port=$2
-    local env_var="${client^^}_PORT"
+    local env_var="$(echo "$client" | tr '[:lower:]' '[:upper:]')_PORT"
     
     echo "Starting $client mock server on port $port..."
     export "$env_var=$port"
