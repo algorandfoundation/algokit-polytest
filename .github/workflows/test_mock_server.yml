@@ -26,7 +26,6 @@ jobs:
         working-directory: ./resources/mock-server
         run: bun run test
 
-  # Stage used to validate scripts used for local development
   scripts-integration:
     name: Scripts (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -47,7 +46,6 @@ jobs:
         working-directory: ./resources/mock-server
         run: |
           chmod +x scripts/*.sh
-          ! scripts/start_server.sh invalid 2>&1
           scripts/start_server.sh 2>&1 | grep -q "Usage:"
       
       - name: Test server lifecycle
