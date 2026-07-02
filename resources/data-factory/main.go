@@ -181,7 +181,31 @@ func makeTxData(txType protocol.TxType, fields any, signer Signer) TxData {
 		Fee:         basics.MicroAlgos{Raw: 1000},
 	}
 
-	if signer.PQSigner != nil {
+	if signer.PQSigner != nil && len(signer.Lsig) > 0 {
+		// PQ-delegated logic signature: the PQ account delegates signing
+		// authority to the program by signing a PQDelegatedProgram bound to
+		// its own (authorizer) address.
+		stxn.Lsig.Logic = signer.Lsig
+
+		program := logic.PQDelegatedProgram{Addr: stxn.Txn.Sender, Program: signer.Lsig}
+		sig, err := signer.PQSigner.Sign(program)
+		if err != nil {
+			panic(err)
+		}
+
+		publicKey := slices.Clone(signer.PQSigner.PublicKey[:])
+		salt, _, err := basics.CanonicalPQAddressSalt(protocol.PQSchemeFalcon1024, publicKey)
+		if err != nil {
+			panic(err)
+		}
+
+		stxn.Lsig.PQSig = transactions.PQSig{
+			Scheme:    protocol.PQSchemeFalcon1024,
+			Salt:      salt,
+			PublicKey: publicKey,
+			Signature: sig,
+		}
+	} else if signer.PQSigner != nil {
 		sig, err := signer.PQSigner.Sign(stxn.Txn)
 		if err != nil {
 			panic(err)
@@ -636,6 +660,11 @@ func main() {
 		PQSigner: generatePQSigner(),
 	}
 
+	pqDelegatedSigner := Signer{
+		PQSigner: generatePQSigner(),
+		Lsig:     op.Program,
+	}
+
 	msigDelegatedSigner := Signer{
 		MsigSigners: []crypto.SignatureSecrets{*secrets[0], *secrets[1], *secrets[2]},
 		Lsig:        op.Program,
@@ -664,5 +693,6 @@ func main() {
 	writeTestDataFile("stateProof", makeStateProof())
 	writeTestDataFile("txGroup", makeTxGroup(simpleSigner))
 	writeTestDataFile("pqPayment", makeSimplePayment(pqSigner))
+	writeTestDataFile("pqDelegatedPayment", makeSimplePayment(pqDelegatedSigner))
 
 }
