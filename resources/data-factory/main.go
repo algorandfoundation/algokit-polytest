@@ -9,6 +9,7 @@ import (
 	"slices"
 
 	"github.com/algorand/go-algorand/crypto"
+	"github.com/algorand/go-algorand/crypto/passphrase"
 	"github.com/algorand/go-algorand/data/basics"
 	"github.com/algorand/go-algorand/data/bookkeeping"
 	"github.com/algorand/go-algorand/data/committee"
@@ -91,6 +92,62 @@ func generatePQSigner() *crypto.FalconSigner {
 	}
 
 	return &signer
+}
+
+// PQMnemonicData captures the mnemonic -> seed -> public key -> address chain
+// used to exercise mnemonic-based PQ key derivation without depending on
+// falcon-1024 in the consuming test suite.
+type PQMnemonicData struct {
+	Mnemonic  string `codec:"mnemonic"`
+	Seed      []byte `codec:"seed"`
+	PublicKey []byte `codec:"publicKey"`
+	Address   string `codec:"address"`
+}
+
+// pq25WordMnemonicToSeed mirrors the algosdk helper of the same name: it decodes
+// the 25-word mnemonic to its 32-byte source key and derives the PQ seed as
+// genericHash("PQK" || scheme || sourceKey). algosdk's genericHash is
+// SHA-512/256, which is exactly crypto.Hash here.
+func pq25WordMnemonicToSeed(mnemonic string, scheme protocol.PQScheme) []byte {
+	sourceKey, err := passphrase.MnemonicToKey(mnemonic)
+	if err != nil {
+		panic(err)
+	}
+
+	preimage := append([]byte("PQK"), scheme[:]...)
+	preimage = append(preimage, sourceKey...)
+
+	seed := crypto.Hash(preimage)
+	return seed[:]
+}
+
+// makePQMnemonicData derives the PQ key chain from the all-zero source key,
+// whose 25-word mnemonic is the canonical "abandon ... invest" phrase.
+func makePQMnemonicData() PQMnemonicData {
+	mnemonic, err := passphrase.KeyToMnemonic(make([]byte, 32))
+	if err != nil {
+		panic(err)
+	}
+
+	seed := pq25WordMnemonicToSeed(mnemonic, protocol.PQSchemeFalcon1024)
+
+	signer, err := crypto.GenerateFalconSignerFromVarLenSeed(seed)
+	if err != nil {
+		panic(err)
+	}
+	publicKey := slices.Clone(signer.PublicKey[:])
+
+	_, address, err := basics.CanonicalPQAddressSalt(protocol.PQSchemeFalcon1024, publicKey)
+	if err != nil {
+		panic(err)
+	}
+
+	return PQMnemonicData{
+		Mnemonic:  mnemonic,
+		Seed:      seed,
+		PublicKey: publicKey,
+		Address:   address.String(),
+	}
 }
 
 // rekeyedSenderAddr returns a deterministic address distinct from any signer,
@@ -747,5 +804,6 @@ func main() {
 	writeTestDataFile("pqRekeyedPayment", makeSimplePayment(pqRekeyedSigner))
 	writeTestDataFile("rekeyedDelegatedPayment", makeSimplePayment(rekeyedDelegatedSigner))
 	writeTestDataFile("pqRekeyedDelegatedPayment", makeSimplePayment(pqRekeyedDelegatedSigner))
+	writeTestDataFile("pqMnemonic", makePQMnemonicData())
 
 }
