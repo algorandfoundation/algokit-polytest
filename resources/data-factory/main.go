@@ -93,6 +93,17 @@ func generatePQSigner() *crypto.FalconSigner {
 	return &signer
 }
 
+// rekeyedSenderAddr returns a deterministic address distinct from any signer,
+// used as the Sender of a rekeyed transaction. The account's own keys never
+// sign; authorization comes from the AuthAddr the account was rekeyed to.
+func rekeyedSenderAddr() basics.Address {
+	var seed crypto.Seed
+	for j := range len(seed) {
+		seed[j] = byte(j + 100)
+	}
+	return basics.Address(crypto.GenerateSignatureSecrets(seed).SignatureVerifier)
+}
+
 func generateMsigAddr(pks [3]crypto.PublicKey) basics.Address {
 	addr, err := crypto.MultisigAddrGen(1, 2, pks[:])
 
@@ -123,6 +134,10 @@ type Signer struct {
 	MsigSigners  []crypto.SignatureSecrets `codec:"msigSigners,omitempty"`
 	Lsig         []byte                    `codec:"lsig,omitempty"`
 	PQSigner     *crypto.FalconSigner      `codec:"pqSigner,omitempty"`
+	// RekeyedSender, when set, is used as the transaction Sender while the
+	// signer authorizes on behalf of it via the AuthAddr field (i.e. the
+	// sender account has been rekeyed to the signer's address).
+	RekeyedSender *basics.Address `codec:"rekeyedSender,omitempty"`
 }
 
 func makeTxData(txType protocol.TxType, fields any, signer Signer) TxData {
@@ -171,14 +186,24 @@ func makeTxData(txType protocol.TxType, fields any, signer Signer) TxData {
 		panic("Unsupported transaction type")
 	}
 
+	// authAddr is the address that actually authorizes the transaction. For a
+	// rekeyed transaction the Sender is a different account and authAddr is
+	// carried in the AuthAddr field; otherwise the Sender authorizes itself.
+	authAddr := addr(signer)
+
 	stxn.Txn.Type = txType
 	stxn.Txn.Header = transactions.Header{
-		Sender:      addr(signer),
+		Sender:      authAddr,
 		FirstValid:  50659540,
 		LastValid:   50660540,
 		GenesisHash: gh,
 		GenesisID:   "testnet-v1.0",
 		Fee:         basics.MicroAlgos{Raw: 1000},
+	}
+
+	if signer.RekeyedSender != nil {
+		stxn.Txn.Header.Sender = *signer.RekeyedSender
+		stxn.AuthAddr = authAddr
 	}
 
 	if signer.PQSigner != nil && len(signer.Lsig) > 0 {
@@ -187,7 +212,7 @@ func makeTxData(txType protocol.TxType, fields any, signer Signer) TxData {
 		// its own (authorizer) address.
 		stxn.Lsig.Logic = signer.Lsig
 
-		program := logic.PQDelegatedProgram{Addr: stxn.Txn.Sender, Program: signer.Lsig}
+		program := logic.PQDelegatedProgram{Addr: authAddr, Program: signer.Lsig}
 		sig, err := signer.PQSigner.Sign(program)
 		if err != nil {
 			panic(err)
@@ -235,7 +260,7 @@ func makeTxData(txType protocol.TxType, fields any, signer Signer) TxData {
 				pks[i] = signer.MsigSigners[i].SignatureVerifier
 			}
 
-			toBeSigned := logic.MultisigProgram{Addr: crypto.Digest(stxn.Txn.Sender), Program: program}
+			toBeSigned := logic.MultisigProgram{Addr: crypto.Digest(authAddr), Program: program}
 
 			stxn.Lsig.LMsig.Threshold = 2
 			stxn.Lsig.LMsig.Version = 1
@@ -670,6 +695,30 @@ func main() {
 		Lsig:        op.Program,
 	}
 
+	rekeyedSender := rekeyedSenderAddr()
+
+	rekeyedSigner := Signer{
+		SingleSigner:  secrets[0],
+		RekeyedSender: &rekeyedSender,
+	}
+
+	pqRekeyedSigner := Signer{
+		PQSigner:      generatePQSigner(),
+		RekeyedSender: &rekeyedSender,
+	}
+
+	rekeyedDelegatedSigner := Signer{
+		SingleSigner:  secrets[0],
+		Lsig:          op.Program,
+		RekeyedSender: &rekeyedSender,
+	}
+
+	pqRekeyedDelegatedSigner := Signer{
+		PQSigner:      generatePQSigner(),
+		Lsig:          op.Program,
+		RekeyedSender: &rekeyedSender,
+	}
+
 	writeTestDataFile("simplePayment", makeSimplePayment(simpleSigner))
 	writeTestDataFile("simpleAssetTransfer", makeSimpleAssetTransfer(simpleSigner))
 	writeTestDataFile("optInAssetTransfer", makeOptInAssetTransfer(simpleSigner))
@@ -694,5 +743,9 @@ func main() {
 	writeTestDataFile("txGroup", makeTxGroup(simpleSigner))
 	writeTestDataFile("pqPayment", makeSimplePayment(pqSigner))
 	writeTestDataFile("pqDelegatedPayment", makeSimplePayment(pqDelegatedSigner))
+	writeTestDataFile("rekeyedPayment", makeSimplePayment(rekeyedSigner))
+	writeTestDataFile("pqRekeyedPayment", makeSimplePayment(pqRekeyedSigner))
+	writeTestDataFile("rekeyedDelegatedPayment", makeSimplePayment(rekeyedDelegatedSigner))
+	writeTestDataFile("pqRekeyedDelegatedPayment", makeSimplePayment(pqRekeyedDelegatedSigner))
 
 }
