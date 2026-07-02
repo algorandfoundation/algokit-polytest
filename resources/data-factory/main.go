@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 
 	"github.com/algorand/go-algorand/crypto"
 	"github.com/algorand/go-algorand/data/basics"
@@ -18,10 +19,12 @@ import (
 	"github.com/algorand/go-algorand/protocol"
 )
 
-type DummyLedgerForSignature struct{}
+type DummyLedgerForSignature struct {
+	proto protocol.ConsensusVersion
+}
 
 func (d *DummyLedgerForSignature) BlockHdr(rnd basics.Round) (blk bookkeeping.BlockHeader, err error) {
-	return createDummyBlockHeader(), nil
+	return createDummyBlockHeader(d.proto), nil
 }
 
 func (d *DummyLedgerForSignature) GenesisHash() crypto.Digest {
@@ -41,8 +44,10 @@ var poolAddr = basics.Address{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x
 const assetId = basics.AssetIndex(107686045)
 const appId = basics.AppIndex(84366825)
 
-func createDummyBlockHeader() bookkeeping.BlockHeader {
-	proto := protocol.ConsensusCurrentVersion
+func createDummyBlockHeader(proto protocol.ConsensusVersion) bookkeeping.BlockHeader {
+	if proto == "" {
+		proto = protocol.ConsensusCurrentVersion
+	}
 
 	return bookkeeping.BlockHeader{
 		Round:       1000,
@@ -71,6 +76,21 @@ func generateSecrets(numAccs int) []*crypto.SignatureSecrets {
 
 	}
 	return secrets
+}
+
+// generatePQSigner generates a deterministic Falcon signer for PQ signature test data
+func generatePQSigner() *crypto.FalconSigner {
+	var seed crypto.FalconSeed
+	for i := range len(seed) {
+		seed[i] = byte(i)
+	}
+
+	signer, err := crypto.GenerateFalconSigner(seed)
+	if err != nil {
+		panic(err)
+	}
+
+	return &signer
 }
 
 func generateMsigAddr(pks [3]crypto.PublicKey) basics.Address {
@@ -102,6 +122,7 @@ type Signer struct {
 	SingleSigner *crypto.SignatureSecrets  `codec:"singleSigner,omitempty"`
 	MsigSigners  []crypto.SignatureSecrets `codec:"msigSigners,omitempty"`
 	Lsig         []byte                    `codec:"lsig,omitempty"`
+	PQSigner     *crypto.FalconSigner      `codec:"pqSigner,omitempty"`
 }
 
 func makeTxData(txType protocol.TxType, fields any, signer Signer) TxData {
@@ -160,7 +181,25 @@ func makeTxData(txType protocol.TxType, fields any, signer Signer) TxData {
 		Fee:         basics.MicroAlgos{Raw: 1000},
 	}
 
-	if len(signer.Lsig) > 0 {
+	if signer.PQSigner != nil {
+		sig, err := signer.PQSigner.Sign(stxn.Txn)
+		if err != nil {
+			panic(err)
+		}
+
+		publicKey := slices.Clone(signer.PQSigner.PublicKey[:])
+		salt, _, err := basics.CanonicalPQAddressSalt(protocol.PQSchemeFalcon1024, publicKey)
+		if err != nil {
+			panic(err)
+		}
+
+		stxn.PQSig = transactions.PQSig{
+			Scheme:    protocol.PQSchemeFalcon1024,
+			Salt:      salt,
+			PublicKey: publicKey,
+			Signature: sig,
+		}
+	} else if len(signer.Lsig) > 0 {
 		program := logic.Program(signer.Lsig)
 		stxn.Lsig.Logic = signer.Lsig
 
@@ -211,8 +250,15 @@ func makeTxData(txType protocol.TxType, fields any, signer Signer) TxData {
 	stxns := make([]transactions.SignedTxn, 1)
 	stxns[0] = stxn
 
-	blkHdr := createDummyBlockHeader()
-	ledger := DummyLedgerForSignature{}
+	// PQ signature schemes (e.g. Falcon-1024) are only enabled under the
+	// future consensus protocol, so verify against it when signing with PQ.
+	proto := protocol.ConsensusCurrentVersion
+	if signer.PQSigner != nil {
+		proto = protocol.ConsensusFuture
+	}
+
+	blkHdr := createDummyBlockHeader(proto)
+	ledger := DummyLedgerForSignature{proto: proto}
 
 	_, err = verify.TxnGroup(stxns, &blkHdr, nil, &ledger)
 	if err != nil {
@@ -229,7 +275,14 @@ func makeTxData(txType protocol.TxType, fields any, signer Signer) TxData {
 }
 
 func addr(signer Signer) basics.Address {
-	if signer.SingleSigner != nil {
+	if signer.PQSigner != nil {
+		publicKey := slices.Clone(signer.PQSigner.PublicKey[:])
+		_, pqAddr, err := basics.CanonicalPQAddressSalt(protocol.PQSchemeFalcon1024, publicKey)
+		if err != nil {
+			panic(err)
+		}
+		return pqAddr
+	} else if signer.SingleSigner != nil {
 		return basics.Address(signer.SingleSigner.SignatureVerifier)
 	} else if len(signer.MsigSigners) > 0 {
 		var pks [3]crypto.PublicKey
@@ -487,7 +540,7 @@ func makeTxGroup(signer Signer) TxGroupData {
 			}
 	}
 
-	blkHdr := createDummyBlockHeader()
+	blkHdr := createDummyBlockHeader(protocol.ConsensusCurrentVersion)
 	ledger := DummyLedgerForSignature{}
 
 	_, err = verify.TxnGroup(stxns, &blkHdr, nil, &ledger)
@@ -579,6 +632,10 @@ func main() {
 		Lsig:         op.Program,
 	}
 
+	pqSigner := Signer{
+		PQSigner: generatePQSigner(),
+	}
+
 	msigDelegatedSigner := Signer{
 		MsigSigners: []crypto.SignatureSecrets{*secrets[0], *secrets[1], *secrets[2]},
 		Lsig:        op.Program,
@@ -606,5 +663,6 @@ func main() {
 	writeTestDataFile("msigDelegatedPayment", makeSimplePayment(msigDelegatedSigner))
 	writeTestDataFile("stateProof", makeStateProof())
 	writeTestDataFile("txGroup", makeTxGroup(simpleSigner))
+	writeTestDataFile("pqPayment", makeSimplePayment(pqSigner))
 
 }
