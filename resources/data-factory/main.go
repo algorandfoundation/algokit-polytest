@@ -131,7 +131,7 @@ func makePQMnemonicData() PQMnemonicData {
 
 	seed := pq25WordMnemonicToSeed(mnemonic, protocol.PQSchemeFalcon1024)
 
-	signer, err := crypto.GenerateFalconSignerFromVarLenSeed(seed)
+	signer, err := crypto.GenerateFalconSigner(crypto.FalconSeed(seed))
 	if err != nil {
 		panic(err)
 	}
@@ -281,7 +281,7 @@ func makeTxData(txType protocol.TxType, fields any, signer Signer) TxData {
 			panic(err)
 		}
 
-		stxn.Lsig.PQSig = transactions.PQSig{
+		stxn.Lsig.PQsig = transactions.PQSig{
 			Scheme:    protocol.PQSchemeFalcon1024,
 			Salt:      salt,
 			PublicKey: publicKey,
@@ -299,7 +299,7 @@ func makeTxData(txType protocol.TxType, fields any, signer Signer) TxData {
 			panic(err)
 		}
 
-		stxn.PQSig = transactions.PQSig{
+		stxn.PQsig = transactions.PQSig{
 			Scheme:    protocol.PQSchemeFalcon1024,
 			Salt:      salt,
 			PublicKey: publicKey,
